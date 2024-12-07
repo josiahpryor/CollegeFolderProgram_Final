@@ -1,27 +1,35 @@
 import customtkinter as ctk
+import tkinter as tk
+from tkinter.filedialog import askopenfile
+from webLoginAndScrape import *
 
-class homeClassFrame(ctk.CTkFrame):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+#https://www.youtube.com/watch?v=itRLRfuL_PQ
 
-        #add widgets to frame
-        self.classLb = ctk.CTkLabel(self)
-        
 
-class App(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-        self.title("College Application")
-        self.geometry("600x400")
+root = tk.Tk()
 
-        #grid system
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure((0,1), weight=1)
+canvas = tk.Canvas(root, width=800, height=500)
+canvas.grid(columnspan=3, rowspan=3)
 
-        #class frame
-        self.class_frame = homeClassFrame(master=self)
-        self.class_frame.grid(row=0,column=0,padx=20,pady=20,sticky="nesw")
+def fetch_classes():
+  #class_list = collectClasses()
+  class_list = sample()
+  text_box.delete("1.0", tk.END)  
+  for Class in class_list:
+    text_box.insert(tk.END, Class+"\n")
 
-app = App()
-app.mainloop()
+#class fetch button
+fetch_text = tk.StringVar()
+fetch_btn = tk.Button(root, textvariable=fetch_text, command=lambda:fetch_classes(), height=2, width=15)
+fetch_text.set("Fetch Classes")
+fetch_btn.grid(column=0, row=1,sticky="nw", padx="65")
+
+
+#text box
+text_box = tk.Text(root, height=10, width=50, padx=15, pady=15)
+text_box.tag_configure("center", justify="center")
+text_box.tag_add("center", 1.0, "end")
+text_box.grid(column=0, row=0)
+
+root.mainloop()
 
