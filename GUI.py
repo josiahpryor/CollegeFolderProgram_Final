@@ -7,7 +7,7 @@ from tkinter import messagebox
 import shutil
 
 class_list = {}
-
+#
 # Root window
 root = tk.Tk()
 root.title("Class Managament Tool")
