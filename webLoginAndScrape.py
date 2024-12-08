@@ -73,6 +73,9 @@ def collectClasses():
     messy_class_text = scrape()
     class_set = organize(messy_class_text)
     return class_set
+def sample():
+    sample = {'COMM 202 06 - Fund of Speech', 'CIS 321 01 - Data & File Structures', 'CIS 302 01 - Windows Programming', 'CIS 314 01 - Adv Computer Lang Concepts', 'CIS 332 01 - Web Programming I'}
+    return sample
 
 if __name__ == "__main__":
     test = collectClasses()
