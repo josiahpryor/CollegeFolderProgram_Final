@@ -2,8 +2,9 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import os
 import shutil
-from webLoginAndScrape import *
+from webLoginAndScrape import collect_classes
 
+#Program to collect college classes from brightspace, create class folders, and sort files into them
 class ClassManagementApp:
     def __init__(self, root):
         #base setup
@@ -70,7 +71,7 @@ class ClassManagementApp:
 
     # Method to fetch classes
     def fetch_classes(self):
-        self.class_list = collectClasses()  # Function from webLoginAndScrape.py
+        self.class_list = collect_classes()  # Function from webLoginAndScrape.py
         self.classLB.delete(0, tk.END)  # Clear the current class list box
         for class_name in self.class_list:
             self.classLB.insert(tk.END, class_name)  # Add each class to the Listbox
