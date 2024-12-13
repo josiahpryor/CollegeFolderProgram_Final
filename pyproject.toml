@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+
+name = "CollegeFolderProgram_Final"
+version = "1.0.1"
+authors = [
+  { name="Josiah Pryor", email="josiahpryoredu@gmail.com" },
+]
+description = "This project is a GUI that allows the user to access their live brightspace classes, create folders from them, and sort files into them."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "tkinter", "os", "selenium", "re", "time", "shutil"
+]
+
+[project.urls]
+Homepage = "https://github.com/josiahpryor/CollegeFolderProgram_Final"
+Issues = "https://github.com/josiahpryor/CollegeFolderProgram_Final/Issues"
