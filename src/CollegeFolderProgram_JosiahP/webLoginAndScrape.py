@@ -20,16 +20,8 @@ CSS_SELECTORS = {
 # Shepherd Brightspace login URL
 LOGIN_URL = "https://suadfs1.shepherd.edu/adfs/ls/?SAMLRequest=jdE7b4MwEADgvVL%2fg%2bUdjG0C2IJIUbtESpek7dClMnAEJLCpz1T9%2bSWN%2bhi73UMnfXdX7pbQ2yO8LYCB7O8rimYa%2fTV%2f5YmEpOOZ4apOAYpiY7KirkVS51lrZEvJM3gcnK2oiBNK9ogL7C0GY8NaSkQacR7x%2fJFLLbgWMpYyk5ts80LJDhF8WGfvnMVlAn8C%2fz408HQ8VLQPYUbNWO2Hcx9wNg3E2MPcg29jaBfWipGNMzOrno3uPFh2cR8uUbz2KPmYRosVXbzVzuCA2poJUIdGn3YPB71y9exdcI0b6fb2hpDyC%2b%2f%2fM2i%2b6XT7A5Wp6JIuj6TIkygtVBepQtWRapURSklZiCYOYNfDYPx3q8ZNv%2fSSXRErqGR%2fP7P9BA%3d%3d&RelayState=%2fd2l%2fhome"
 
-def init_driver():
-    """Initialize and return the Chrome WebDriver."""
-    return webdriver.Chrome()
-
-def wait_for_element(driver, css_selector, timeout=30):
-    """Wait for an element to become visible based on the given CSS selector."""
-    WebDriverWait(driver, timeout).until(EC.visibility_of_element_located((By.TAG_NAME, css_selector)))
-
 def drill_down_to_classes(driver):
-    """Navigate through the shadow DOM and return class elements."""
+    #Navigate through the shadow DOM and return class elements
     start = driver.find_element(By.TAG_NAME, CSS_SELECTORS["host1"])
     shadow0 = start.shadow_root # First shadow drill
     shadow1 = shadow0.find_element(By.CSS_SELECTOR, CSS_SELECTORS["host2"]).shadow_root
@@ -43,7 +35,7 @@ def drill_down_to_classes(driver):
     return shadow3.find_elements(By.CSS_SELECTOR, "d2l-enrollment-card") # List of sections containing class info
 
 def extract_class_text(classes):
-    """Extract and return the text content of each class."""
+    #Extract and return the text content of each class
     num_classes = len(classes) # Number of sections that will contain class info
     class_num = 1 # Used for iterator through classes
     all_class_text = "" # For appending class text
@@ -58,7 +50,8 @@ def extract_class_text(classes):
     return all_class_text
 
 def scrape():
-    """Scrape the classes from the Shepherd Brightspace website."""
+    #Scrape the classes from the Shepherd Brightspace website
+
     # Inits brightspace login web with chrome
     driver = webdriver.Chrome()
     driver.get(LOGIN_URL)
@@ -73,7 +66,7 @@ def scrape():
         driver.quit()  # Ensure the driver is quit even if an exception occurs
 
 def organize(all_class_text):
-    """Organize and extract unique class names from the messy text."""
+    #Organize and extract unique class names from the messy text
     pattern = r"\w{3,4} \d{3} \d{2} - [^,]*"  # Regular expression to match class names
     matches = re.findall(pattern, all_class_text)
 
@@ -81,12 +74,12 @@ def organize(all_class_text):
     return set(match.strip() for match in matches)
 
 def collect_classes():
-    """Collect and return a set of unique class names."""
+    #Collect and return a set of unique class names
     unorganized_class_text = scrape()
     return organize(unorganized_class_text)
 
 def sample_classes():
-    """What the class tuple should appear as."""
+    #What the class tuple should appear as
     return {
         'COMM 202 06 - Fund of Speech',
         'CIS 321 01 - Data & File Structures',
@@ -96,5 +89,6 @@ def sample_classes():
     }
 
 if __name__ == "__main__":
+    #test
     organized_class_tuple = collect_classes()
     print(organized_class_tuple)
