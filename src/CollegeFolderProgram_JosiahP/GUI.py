@@ -1,155 +1,132 @@
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import ttk
-from src.CollegeFolderProgram_JosiahP.webLoginAndScrape import *
+from tkinter import filedialog, messagebox, ttk
 import os
-from tkinter import messagebox
 import shutil
+from webLoginAndScrape import *
 
-#used as global variable
-class_list = {}
-
-# Root window
-root = tk.Tk()
-root.title("Class Managament Tool")
-root.geometry("900x600")
-
-#overall frame
-top_frame = tk.Frame(root, padx=10,pady=10)
-top_frame.grid(row=0,column=0,columnspan=2,sticky="ew")
-
-#left frame - class fetch and folder creation
-class_frame = tk.LabelFrame(root,text="Classes",padx=10,pady=10)
-class_frame.grid(row=1,column=0,sticky="nesw",padx=10,pady=10)
-
-#right frame - file sort
-file_frame = tk.LabelFrame(root, text="Files",padx=10,pady=10)
-file_frame.grid(row=1,column=1,sticky="nesw",padx=10,pady=10)
-
-
-
-# Function to fetch classes
-def fetch_classes():
-    global class_list
-    class_list = collectClasses() # func from webLoginAndScrape.py
-    classLB.delete(0, tk.END)  # Clear the current class list box
-    for Class in class_list: 
-        classLB.insert(tk.END, Class)  # Add each class to the Listbox
-    
-
-def create_folders():
-    if class_list: #makes sure classes were imported
-        global root_folder_path #used in relocating files
-        root_folder_path = filedialog.askdirectory()
-        base_folders = ["Documents", "Code"] #expand later? let user choose base folders
-        if root_folder_path:
-            for folder in base_folders: #makes base folders
-                base_folder_path = root_folder_path+f"/{folder}"
-                os.makedirs(base_folder_path, exist_ok=True)
-                for Class in class_list: #makes class folders in each base folder
-                    #expand later? let user choose which classes end up in base folders
-                    class_folder_path = base_folder_path+f"/{Class}"
-                    os.makedirs(class_folder_path, exist_ok=True)
-                    class_folder_path = base_folder_path+f"/[1] Previous" #for old classes
-                    os.makedirs(class_folder_path, exist_ok=True)
-        #Adds to right frame drop downs once folders created
-        class_folder_CB['values'] = list(class_list)
-        parent_folder_CB['values'] = base_folders
-    else:
-        messagebox.showerror("Error", "Please import classes first")
-            
-
-def find_files():
-    # test_file_sort() - for testing
-    global files_folder_path #files to sort
-    files_folder_path = filedialog.askdirectory()
-    if files_folder_path:
-        files_LB.delete(0, tk.END) #clear
-        files = os.listdir(files_folder_path) #gathers list of file names
-        for file in files: # puts each file name in right frame
-            files_LB.insert(tk.END, file)
-
-def test_file_sort(): #test method that just replenishes files for sorting
-    #creates files with data that can be sorted
-    path = "C:/test"
-    os.makedirs(path, exist_ok=True)
-
-    file1 = path+"/file1"
-    if not os.path.exists(file1):
-        with open(file1, "w") as file:
-            file.write("This is test file1")
-    file2 = path+"/file2"
-    if not os.path.exists(file2):
-        with open(file2, "w") as file:
-            file.write("This is test file2")
-    file3 = path+"/file3"
-    if not os.path.exists(file3):
-        with open(file3, "w") as file:
-            file.write("This is test file3")
-
-def add_files(): #adds files to new dir
-    #gets tuple of file indexes in list box
-    selected_files_index = files_LB.curselection() 
-    selected_files = []
-    #gets selected class folder from drop down
-    class_folder_selected = class_folder_CB.get()
-    #gets selected parent folder from drop down
-    parent_folder_selected = parent_folder_CB.get()
-    #ensures that user has selected a folder from both drop downs and has imported files
-    if selected_files_index and class_folder_selected != class_folder_CB_placeholder and parent_folder_selected != parent_folder_CB_placeholder:
-        #reverse to prevent indexing issues when removing
-        for index in reversed(selected_files_index):
-            selected_file = files_LB.get(index)  # Get the file name at the current index
-            selected_files.append(selected_file)  # Add it to the selected files list
-            files_LB.delete(index)  # Remove it from the listbox
-            #directory concatenation to propely move files
-            old_folder_path = files_folder_path+"/"+selected_file
-            new_folder_path = root_folder_path+"/"+parent_folder_selected+"/"+class_folder_selected
-            shutil.move(old_folder_path, new_folder_path) #move files
-    
+class ClassManagementApp:
+    def __init__(self, root):
+        #base setup
+        self.root = root
+        self.root.title("Class Management Tool")
+        self.root.geometry("900x600")
+        #global variables for cross class access
+        self.class_list = {}
+        self.root_folder_path = ""
+        self.files_folder_path = ""
         
-    
-    
-#Classes frame widgets - left frame
-classLB = tk.Listbox(class_frame, height=15, width=40) #display imported classes
-classLB.pack(fill="both", expand=True, padx=5,pady=5)
+        # Setup Frames
+        self.setup_frames()
+        
+        # Initialize UI Components
+        self.setup_widgets()
 
-fetch_btn = tk.Button(class_frame, text="Fetch Classes", command=fetch_classes, height=2, width=20)
-fetch_btn.pack(pady=5)
+    def setup_frames(self):
+        # Overall frame
+        self.top_frame = tk.Frame(self.root, padx=10, pady=10)
+        self.top_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
 
-folder_btn = tk.Button(class_frame, text="Create Folders", command=create_folders, height=2, width=20)
-folder_btn.pack(pady=5)
+        # Left frame - Class fetch and folder creation
+        self.class_frame = tk.LabelFrame(self.root, text="Classes", padx=10, pady=10)
+        self.class_frame.grid(row=1, column=0, sticky="nesw", padx=10, pady=10)
 
-#Files frame widgets - right frame
-parent_folder_paths = []  # List to store available parent_folder destination paths
-parent_folder_CB = ttk.Combobox(file_frame, values=parent_folder_paths, state="readonly", width=50)
-parent_folder_CB.pack(pady=5)
-parent_folder_CB_placeholder = "Select a parent folder (Create folders first)" #important for add_file function
-parent_folder_CB.set(parent_folder_CB_placeholder) 
+        # Right frame - File sorting
+        self.file_frame = tk.LabelFrame(self.root, text="Files", padx=10, pady=10)
+        self.file_frame.grid(row=1, column=1, sticky="nesw", padx=10, pady=10)
 
-class_folder_paths = []  # List to store available class_folderination paths
-class_folder_CB = ttk.Combobox(file_frame, values=class_folder_paths, state="readonly", width=50)
-class_folder_CB.pack(pady=5)
-class_folder_CB_placeholder = "Select a class folder" #important for add_file function
-class_folder_CB.set(class_folder_CB_placeholder) 
+    def setup_widgets(self):
+        # Classes frame (left frame) widgets
+        self.classLB = tk.Listbox(self.class_frame, height=15, width=40)
+        self.classLB.pack(fill="both", expand=True, padx=5, pady=5)
 
-files_LB = tk.Listbox(file_frame, selectmode="multiple", height=15, width=40)
-files_LB.pack(fill="both", expand=True,padx=5,pady=5)
+        self.fetch_btn = tk.Button(self.class_frame, text="Fetch Classes", command=self.fetch_classes, height=2, width=20)
+        self.fetch_btn.pack(pady=5)
 
-find_btn = tk.Button(file_frame, text="Find Files", command=find_files, height=2, width=20)
-find_btn.pack(pady=5)
+        self.folder_btn = tk.Button(self.class_frame, text="Create Folders", command=self.create_folders, height=2, width=20)
+        self.folder_btn.pack(pady=5)
 
-add_btn = tk.Button(file_frame, text="Add Files", command=add_files, height=2,width=20 )
-add_btn.pack(pady=5)
+        # Files frame (right frame) widgets
+        self.parent_folder_CB = ttk.Combobox(self.file_frame, state="readonly", width=50)
+        self.parent_folder_CB.pack(pady=5)
+        self.parent_folder_CB.set("Select a parent folder (Create folders first)")
 
+        self.class_folder_CB = ttk.Combobox(self.file_frame, state="readonly", width=50)
+        self.class_folder_CB.pack(pady=5)
+        self.class_folder_CB.set("Select a class folder")
 
-# Configure column and row weights for responsiveness
-root.grid_rowconfigure(1, weight=1)
-root.grid_columnconfigure(0, weight=1)
-root.grid_columnconfigure(1, weight=1)
-root.grid_columnconfigure(2, weight=1)
+        self.files_LB = tk.Listbox(self.file_frame, selectmode="multiple", height=15, width=40)
+        self.files_LB.pack(fill="both", expand=True, padx=5, pady=5)
 
+        self.find_btn = tk.Button(self.file_frame, text="Find Files", command=self.find_files, height=2, width=20)
+        self.find_btn.pack(pady=5)
 
+        self.add_btn = tk.Button(self.file_frame, text="Add Files", command=self.add_files, height=2, width=20)
+        self.add_btn.pack(pady=5)
 
-root.mainloop()
+        # Configure column and row weights for responsiveness
+        self.root.grid_rowconfigure(1, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+        self.root.grid_columnconfigure(1, weight=1)
 
+    # Method to fetch classes
+    def fetch_classes(self):
+        self.class_list = collectClasses()  # Function from webLoginAndScrape.py
+        self.classLB.delete(0, tk.END)  # Clear the current class list box
+        for class_name in self.class_list:
+            self.classLB.insert(tk.END, class_name)  # Add each class to the Listbox
+
+    # Method to create folders
+    def create_folders(self):
+        if self.class_list:
+            self.root_folder_path = filedialog.askdirectory()
+            base_folders = ["Documents", "Code"]
+            if self.root_folder_path:
+                for folder in base_folders:
+                    base_folder_path = os.path.join(self.root_folder_path, folder)
+                    os.makedirs(base_folder_path, exist_ok=True)
+                    for class_name in self.class_list:
+                        class_folder_path = os.path.join(base_folder_path, class_name)
+                        os.makedirs(class_folder_path, exist_ok=True)
+                    # Create Previous folder for old classes
+                    previous_folder_path = os.path.join(base_folder_path, "[1] Previous")
+                    os.makedirs(previous_folder_path, exist_ok=True)
+
+                # Update comboboxes
+                self.class_folder_CB['values'] = list(self.class_list)
+                self.parent_folder_CB['values'] = base_folders
+        else:
+            messagebox.showerror("Error", "Please import classes first")
+
+    # Method to find files for sorting
+    def find_files(self):
+        self.files_folder_path = filedialog.askdirectory()
+        if self.files_folder_path:
+            self.files_LB.delete(0, tk.END)  # Clear the listbox
+            files = os.listdir(self.files_folder_path)
+            for file in files:
+                self.files_LB.insert(tk.END, file)
+
+    # Method to add files to selected folder
+    def add_files(self):
+        selected_files_index = self.files_LB.curselection()
+        selected_files = []
+        class_folder_selected = self.class_folder_CB.get()
+        parent_folder_selected = self.parent_folder_CB.get()
+
+        if selected_files_index and class_folder_selected != "Select a class folder" and parent_folder_selected != "Select a parent folder (Create folders first)":
+            for index in reversed(selected_files_index):
+                selected_file = self.files_LB.get(index)
+                selected_files.append(selected_file)
+                self.files_LB.delete(index)
+                old_folder_path = os.path.join(self.files_folder_path, selected_file)
+                new_folder_path = os.path.join(self.root_folder_path, parent_folder_selected, class_folder_selected)
+                shutil.move(old_folder_path, new_folder_path)  # Move files
+
+        else:
+            messagebox.showerror("Error", "Please select files and folders properly.")
+
+# Main program
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ClassManagementApp(root)
+    root.mainloop()
