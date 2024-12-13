@@ -77,13 +77,15 @@ class ClassManagementApp:
 
     # Method to create folders
     def create_folders(self):
-        if self.class_list:
+        if self.class_list: # Ensures classes imported
             self.root_folder_path = filedialog.askdirectory()
-            base_folders = ["Documents", "Code"]
+            base_folders = ["Documents", "Code"] # Base folders to hold classes
             if self.root_folder_path:
                 for folder in base_folders:
+                    # Create base folders
                     base_folder_path = os.path.join(self.root_folder_path, folder)
                     os.makedirs(base_folder_path, exist_ok=True)
+                    # Create class folders in base folders
                     for class_name in self.class_list:
                         class_folder_path = os.path.join(base_folder_path, class_name)
                         os.makedirs(class_folder_path, exist_ok=True)
@@ -91,41 +93,46 @@ class ClassManagementApp:
                     previous_folder_path = os.path.join(base_folder_path, "[1] Previous")
                     os.makedirs(previous_folder_path, exist_ok=True)
 
-                # Update comboboxes
+                # Update comboboxes with base and class folders
                 self.class_folder_CB['values'] = list(self.class_list)
                 self.parent_folder_CB['values'] = base_folders
         else:
+            # Must import classes before creating folders
             messagebox.showerror("Error", "Please import classes first")
 
     # Method to find files for sorting
     def find_files(self):
+        # Global file path
         self.files_folder_path = filedialog.askdirectory()
         if self.files_folder_path:
-            self.files_LB.delete(0, tk.END)  # Clear the listbox
-            files = os.listdir(self.files_folder_path)
-            for file in files:
-                self.files_LB.insert(tk.END, file)
+            self.files_LB.delete(0, tk.END)  # Clear the ListBox
+            files = os.listdir(self.files_folder_path) # Get file names
+            for file in files: 
+                self.files_LB.insert(tk.END, file) # Add file names to ListBox
 
     # Method to add files to selected folder
     def add_files(self):
-        selected_files_index = self.files_LB.curselection()
+        selected_files_index = self.files_LB.curselection() # Collects selected files
         selected_files = []
+        # Collects folder selection
         class_folder_selected = self.class_folder_CB.get()
         parent_folder_selected = self.parent_folder_CB.get()
 
-        if selected_files_index and class_folder_selected != "Select a class folder" and parent_folder_selected != "Select a parent folder (Create folders first)":
-            for index in reversed(selected_files_index):
+        # Add files
+        if selected_files_index and class_folder_selected != "Select a class folder" and parent_folder_selected != "Select a parent folder (Create folders first)": # Ensures that all options are selected 
+            for index in reversed(selected_files_index): # Reverse to negate index issues
                 selected_file = self.files_LB.get(index)
                 selected_files.append(selected_file)
                 self.files_LB.delete(index)
+                # Gather dirs for moving files
                 old_folder_path = os.path.join(self.files_folder_path, selected_file)
                 new_folder_path = os.path.join(self.root_folder_path, parent_folder_selected, class_folder_selected)
                 shutil.move(old_folder_path, new_folder_path)  # Move files
 
-        else:
+        else: # Error handling
             messagebox.showerror("Error", "Please select files and folders properly.")
 
-# Main program
+# Call main
 if __name__ == "__main__":
     root = tk.Tk()
     app = ClassManagementApp(root)
